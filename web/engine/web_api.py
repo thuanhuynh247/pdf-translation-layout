@@ -56,10 +56,11 @@ def _progress() -> dict:
             "batches_total": len(batches)}
 
 
-def prepare(pdf_path: str, lo: int = 15, trang: str = "") -> str:
+def prepare(pdf_path: str, lo: int = 15, trang: str = "", huong: str = "tu-dong") -> str:
+    """huong: "tu-dong" (nhận theo ngôn ngữ tài liệu), "en-vi" hoặc "vi-en"."""
     shutil.rmtree(WORK, ignore_errors=True)
     shutil.rmtree(OUT, ignore_errors=True)
-    code, out = _run(D.cmd_chuan_bi, pdf=pdf_path, lo=lo, lam_lai=True, trang=trang or None)
+    code, out = _run(D.cmd_chuan_bi, pdf=pdf_path, lo=lo, lam_lai=True, trang=trang or None, huong=huong or "tu-dong")
     if code:
         return json.dumps({"ok": False, "error": out})
     job = _job()
@@ -68,9 +69,11 @@ def prepare(pdf_path: str, lo: int = 15, trang: str = "") -> str:
     families = sorted({s.get("family", "sans") for p in pages for s in p["segments"]} | {"sans"})
     words = sum(len(s["text"].split()) for p in pages for s in p["segments"] if s["translate"])
     chars = sum(len(t) for t in {s["text"] for p in pages for s in p["segments"] if s["translate"]})  # bỏ trùng
+    h = meta.get("huong", "en-vi")
     return json.dumps({"ok": True, "message": out, "name": meta["ten"], "pages": meta["so_trang"],
                        "scanned": meta.get("trang_scan", []), "families": families, "words": words,
-                       "chars": chars, **_progress()}, ensure_ascii=False)
+                       "chars": chars, "huong": h, "rules": D.QUY_TAC[h], "rules_end": D.DONG_KET[h],
+                       "clean": meta.get("lam_sach", {}), **_progress()}, ensure_ascii=False)
 
 
 def next_items(max_chars: int = 6000) -> str:
@@ -96,13 +99,14 @@ def load(text: str) -> str:
     if code:
         return json.dumps({"ok": False, "error": out or "Không đọc được JSON bản dịch."}, ensure_ascii=False)
     warn = {}
+    huong = D._huong(job)
     try:
         import re
         data = json.loads(re.search(r"\{.*\}|\[.*\]", text, flags=re.S).group(0))
         if isinstance(data, dict):
             for k, v in data.items():
                 if k in idx and v:
-                    w = D._check_translation(idx[k]["text"], str(v))
+                    w = D._check_translation(idx[k]["text"], str(v), huong)
                     if w:
                         warn[k] = {"warning": w, "source": idx[k]["text"], "vi": str(v)}
     except Exception:
@@ -164,6 +168,7 @@ def qa() -> str:
     report = D._load(job / "kiem_dinh.json", {})
     md = next(Path(OUT).glob("*_phieu-kiem-dinh.md"), None)
     return json.dumps({"ok": code in (0, 2), "pass": bool(report.get("dat")), "checks": report.get("checks", []),
+                       "huong": report.get("huong", "en-vi"),
                        "report_name": md.name if md else "", "report_path": str(md) if md else "",
                        "report_md": md.read_text(encoding="utf-8") if md else out,
                        "nghi_van": report.get("nghi_van", {}), "tran": report.get("tran", []),

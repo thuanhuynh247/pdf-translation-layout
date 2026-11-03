@@ -9,16 +9,12 @@
   var PREFERRED_MODELS = ["google/gemini-2.5-flash", "google/gemini-2.5-pro", "anthropic/claude-sonnet-4.5",
     "openai/gpt-4.1-mini", "openai/gpt-4o-mini", "deepseek/deepseek-chat-v3.1", "deepseek/deepseek-chat"];
 
-  var RULES = [
-    "Dịch các đoạn tiếng Anh dưới đây sang tiếng Việt cho một tài liệu PDF.",
-    "Yêu cầu:",
-    "- Tiếng Việt tự nhiên, đủ dấu, đúng văn phong của tài liệu.",
-    "- Giữ nguyên số liệu, đơn vị, tên riêng, URL, email, mã, công thức.",
-    "- Thuật ngữ thống nhất với các lô trước trong cuộc trò chuyện này.",
-    "- Mục danh sách giữ ký hiệu đầu dòng (•, 1., a)…). Đoạn có \"loai\": \"tieu-de\" là tiêu đề: dịch ngắn gọn.",
-    "- Ô bảng và nhãn ngắn: dịch thật ngắn để vừa chỗ.",
-    "- Không gộp, không tách, không bỏ đoạn nào; không thêm chú thích hay giải thích."
-  ].join("\n");
+  // Quy tắc dịch lấy từ bộ máy (dich_pdf.QUY_TAC) theo chiều của tài liệu, để mọi kênh dùng chung một bản
+  var LANG = { "en-vi": { src: "en", tgt: "vi", srcName: "tiếng Anh", tgtName: "tiếng Việt", label: "Anh → Việt", out: "_VI.pdf" },
+    "vi-en": { src: "vi", tgt: "en", srcName: "tiếng Việt", tgtName: "tiếng Anh", label: "Việt → Anh", out: "_EN.pdf" } };
+  function dir() { return LANG[(S.info && S.info.huong) || "en-vi"]; }
+  function rules() { return (S.info && S.info.rules) || ""; }
+  function rulesEnd(n) { return ((S.info && S.info.rules_end) || "").replace("{n}", n).replace(/\{\{/g, "{").replace(/\}\}/g, "}"); }
 
   /* ---------------- Worker ---------------- */
   var worker = null, seq = 0, waiting = {};
@@ -74,7 +70,7 @@
   }
 
   /* ---------------- Lưu tạm bản dịch (phòng khi tải lại trang) ---------------- */
-  function storeKey() { return "ptl:" + S.hash + ":" + ($("#pages").value.trim() || "all"); }
+  function storeKey() { return "ptl:" + S.hash + ":" + ($("#pages").value.trim() || "all") + ((S.info && S.info.huong === "vi-en") ? ":vi-en" : ""); }
   function saveLocal() {
     return call("translations").then(function (tr) {
       var v = JSON.stringify({ t: Date.now(), name: S.name, tr: tr });
@@ -111,7 +107,7 @@
       setText("#drop-title", file.name);
       setText("#drop-sub", fmtMB(file.size) + " · bấm để chọn file khác");
       return hashBytes(buf);
-    }).then(function (h) { S.hash = h; return prepare(); })
+    }).then(function (h) { S.hash = h; S.huong = "tu-dong"; return prepare(); })
       .catch(function (e) { err("#b1-err", e.message || String(e)); });
   }
 
@@ -119,9 +115,11 @@
     show("#b2", false); show("#b3", false); show("#b4", false);
     engineStatus("Đang chuẩn bị bộ máy (lần đầu khoảng 30 MB)…", 0.01);
     var pages = $("#pages").value.trim();
-    return call("prepare", S.bytes.slice(0), S.name, 15, pages).then(function (r) {
+    return call("prepare", S.bytes.slice(0), S.name, 15, pages, S.huong || "tu-dong").then(function (r) {
       if (!r.ok) throw new Error(r.error || "Không mở được file.");
       S.info = r;
+      $$('input[name="huong"]').forEach(function (x) { x.checked = x.value === r.huong; });
+      setText("#huong-note", S.huong === "tu-dong" ? "Tự nhận theo chữ trong tài liệu" : "");
       var src = r.sources || {};
       engineStatus("Đã đọc xong tài liệu" + (src.core ? " · bộ máy tải từ " + (src.core === src.wheel ? src.core : src.core + " và " + src.wheel) : ""), 1);
       renderSummary(r);
@@ -151,6 +149,11 @@
       (r.done ? "<div><dt>Đã dịch</dt><dd>" + plural(r.done) + "/" + plural(r.total) + " đoạn</dd></div>" : "") +
       "</dl>";
     if (r.scanned && r.scanned.length) html += "<p class='notice'>Có " + r.scanned.length + " trang có vẻ là ảnh scan, không có chữ để dịch; các trang đó giữ nguyên.</p>";
+    var c = r.clean || {}, cm = c.chuyen_ma || {}, kinds = Object.keys(cm);
+    if (kinds.length) html += "<p class='notice'>Tài liệu dùng phông tiếng Việt cũ (" + kinds.map(function (k) { return k.toUpperCase(); }).join(", ") + "). Trang đã chuyển chữ sang Unicode trước khi dịch.</p>";
+    if (c.dau_roi) html += "<p class='notice'>Có " + c.dau_roi + " dòng bị tách dấu thanh khỏi chữ cái; trang đã gắn lại.</p>";
+    if (c.trang_loi_chu && c.trang_loi_chu.length) html += "<p class='notice'>" + c.trang_loi_chu.length + " trang trích ra chữ bị hỏng mã, không đọc được. Các trang đó giữ nguyên, không đưa cho AI.</p>";
+    if (r.huong === "vi-en") html += "<p class='notice'>Bản tiếng Anh là bản nháp để đọc và tự kiểm. Học bạ, bằng cấp, giấy tờ nộp đại sứ quán hay cơ quan nhà nước vẫn cần người dịch ký và được chứng thực.</p>";
     if (!r.total) html += "<p class='notice'>Không tìm thấy chữ nào để dịch: có thể đây là PDF scan.</p>";
     $("#summary").innerHTML = html;
     $("#start").disabled = !r.total;
@@ -173,8 +176,7 @@
   }
 
   function promptFor(items, extra) {
-    return RULES + (extra ? "\n" + extra : "") +
-      "\nChỉ trả về MỘT khối JSON dạng {\"<id>\": \"<bản dịch>\", ...} với đủ " + items.length + " id dưới đây.\n\n" +
+    return rules() + (extra ? "\n" + extra : "") + "\n" + rulesEnd(items.length) + "\n\n" +
       items.map(function (it) { return JSON.stringify(it); }).join("\n");
   }
 
@@ -229,7 +231,9 @@
     if (!S.warnIds.length) return;
     call("itemsFor", S.warnIds).then(function (items) {
       S.ids = items.map(function (i) { return i.id; });
-      $("#prompt").value = promptFor(items, "- Đây là lượt dịch lại: các đoạn này lần trước còn tiếng Anh, thiếu dấu hoặc lệch số liệu. Hãy sửa.");
+      $("#prompt").value = promptFor(items, dir().tgt === "en"
+        ? "- This is a retry: last time these segments still had Vietnamese words, or changed numbers, dates or document numbers. Fix them."
+        : "- Đây là lượt dịch lại: các đoạn này lần trước còn tiếng Anh, thiếu dấu hoặc lệch số liệu. Hãy sửa.");
       setText("#pb-label", "Câu nhắn dịch lại · " + items.length + " đoạn");
       show("#warn-box", false);
       $("#prompt").scrollIntoView({ behavior: "smooth", block: "center" });
@@ -282,8 +286,8 @@
       method: "POST",
       headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json",
         "HTTP-Referer": location.origin, "X-Title": "pdf-translation-layout" },
-      body: JSON.stringify({ model: model, temperature: 0.2, messages: [
-        { role: "system", content: RULES.replace("trong cuộc trò chuyện này", "trong toàn bộ tài liệu") + "\nChỉ trả về MỘT khối JSON dạng {\"<id>\": \"<bản dịch>\"}, không viết gì khác." },
+      body: JSON.stringify({ model: model, temperature: 0, messages: [
+        { role: "system", content: rules().replace("trong cuộc trò chuyện này", "trong toàn bộ tài liệu") + "\n" + rulesEnd(items.length) },
         { role: "user", content: items.map(function (it) { return JSON.stringify(it); }).join("\n") }] })
     }).then(function (res) {
       if (res.status === 429 || res.status >= 500) {
@@ -342,16 +346,17 @@
       setText("#fast-status", "Trình duyệt này chưa có bộ dịch tích hợp. Cần Chrome 138 trở lên trên máy tính (Windows, macOS, Linux). Hãy dùng cách Dán hoặc Khóa API.");
       $("#fast-run").disabled = true; return;
     }
-    Translator.availability({ sourceLanguage: "en", targetLanguage: "vi" }).then(function (a) {
-      var msg = { available: "Bộ dịch Anh → Việt đã có sẵn trên máy.", downloadable: "Lần đầu Chrome sẽ tải gói ngôn ngữ Anh → Việt (vài chục MB).",
-        downloading: "Chrome đang tải gói ngôn ngữ.", unavailable: "Chrome trên máy này không hỗ trợ dịch Anh → Việt. Hãy dùng cách Dán." }[a] || a;
+    var L = dir();
+    Translator.availability({ sourceLanguage: L.src, targetLanguage: L.tgt }).then(function (a) {
+      var msg = { available: "Bộ dịch " + L.label + " đã có sẵn trên máy.", downloadable: "Lần đầu Chrome sẽ tải gói ngôn ngữ " + L.label + " (vài chục MB).",
+        downloading: "Chrome đang tải gói ngôn ngữ.", unavailable: "Chrome trên máy này không hỗ trợ dịch " + L.label + ". Hãy dùng cách Dán." }[a] || a;
       setText("#fast-status", msg);
       $("#fast-run").disabled = a === "unavailable";
     }).catch(function (e) { setText("#fast-status", "Không kiểm tra được bộ dịch: " + e.message); });
   }
   function runFast() {
     S.stop = false; show("#fast-stop", true); $("#fast-run").disabled = true;
-    Translator.create({ sourceLanguage: "en", targetLanguage: "vi", monitor: function (m) {
+    Translator.create({ sourceLanguage: dir().src, targetLanguage: dir().tgt, monitor: function (m) {
       m.addEventListener("downloadprogress", function (e) { setText("#fast-status", "Đang tải gói ngôn ngữ " + Math.round(e.loaded * 100) + "%"); });
     } }).then(function (tr) {
       setText("#fast-status", "Đang dịch trên máy…");
@@ -382,10 +387,11 @@
     var btn = $("#build"); btn.disabled = true; show("#result", false);
     S.urls.forEach(function (u) { URL.revokeObjectURL(u); }); S.urls = [];
     var steps = ["don-ngu"].concat(outs), files = {}, t0 = Date.now();
-    setText("#build-text", "Đang dựng bản tiếng Việt… (tài liệu dài có thể mất vài phút)");
+    var L = dir();
+    setText("#build-text", "Đang dựng bản " + L.tgtName + "… (tài liệu dài có thể mất vài phút)");
     steps.reduce(function (p, m, i) {
       return p.then(function () {
-        setText("#build-text", "Đang dựng " + ({ "don-ngu": "bản tiếng Việt", "doi-trang": "song ngữ đối trang", "hai-cot": "song ngữ hai cột", "xen-doan": "song ngữ xen đoạn" }[m]) + " (" + (i + 1) + "/" + steps.length + ")…");
+        setText("#build-text", "Đang dựng " + ({ "don-ngu": "bản " + L.tgtName, "doi-trang": "song ngữ đối trang", "hai-cot": "song ngữ hai cột", "xen-doan": "song ngữ xen đoạn" }[m]) + " (" + (i + 1) + "/" + steps.length + ")…");
         return call("build", m, footer).then(function (r) {
           if (!r.ok) throw new Error(r.error);
           r.files.forEach(function (f) { files[f.name] = f; });
@@ -397,7 +403,7 @@
     }).then(function (qa) {
       renderQa(qa);
       var list = Object.keys(files).map(function (k) { return files[k]; })
-        .filter(function (f) { return f.name.indexOf("_VI.pdf") > 0 || steps.some(function (m) { return m !== "don-ngu" && f.name.indexOf(m) > 0; }); });
+        .filter(function (f) { return f.name.indexOf(L.out) > 0 || steps.some(function (m) { return m !== "don-ngu" && f.name.indexOf(m) > 0; }); });
       if (qa.report_path) list.push({ name: qa.report_name, path: qa.report_path, size: qa.report_md.length });
       return renderFiles(list).then(function () { return call("zipAll"); });
     }).then(function (z) {
@@ -413,7 +419,7 @@
       .then(function () { btn.disabled = false; });
   }
 
-  var DESC = { "_VI.pdf": "Bản tiếng Việt, đúng từng trang", "song-ngu-doi-trang": "Trang gốc và trang dịch xen kẽ",
+  var DESC = { "_VI.pdf": "Bản tiếng Việt, đúng từng trang", "_EN.pdf": "Bản tiếng Anh, đúng từng trang", "song-ngu-doi-trang": "Trang gốc và trang dịch xen kẽ",
     "song-ngu-hai-cot": "Gốc bên trái, dịch bên phải", "song-ngu-xen-doan": "Mỗi đoạn gốc kèm bản dịch ngay dưới",
     "phieu-kiem-dinh": "Phiếu kiểm định (Markdown)" };
   function renderFiles(list) {
@@ -436,10 +442,11 @@
     var v = $("#verdict");
     v.className = "verdict " + (qa.pass ? "ok" : "bad");
     v.innerHTML = "<strong>" + (qa.pass ? "Phiếu kiểm định: ĐẠT" : "Phiếu kiểm định: CHƯA ĐẠT") + "</strong><span>" +
-      (qa.pass ? "Không có ký tự lỗi phông, đoạn tràn khung hay đoạn chưa dịch." : "Xem các mục cần sửa bên dưới. Đoạn chưa dịch vẫn giữ tiếng Anh.") + "</span>";
+      (qa.pass ? "Không có ký tự lỗi phông, đoạn tràn khung hay đoạn chưa dịch." : "Xem các mục cần sửa bên dưới. Đoạn chưa dịch vẫn giữ " + dir().srcName + ".") + "</span>";
     $("#qa-body").innerHTML = (qa.checks || []).map(function (c, i) {
-      var mark = c.dat ? "✔ Đạt" : (i >= 6 ? "⚠ Xem lại" : "✘ Cần sửa");
-      return "<tr><th scope='row'>" + esc(c.muc) + "</th><td class='" + (c.dat ? "yes" : i >= 6 ? "" : "no-bad") + "'>" + mark + "</td><td>" + esc(c.chi_tiet) + "</td></tr>";
+      var warnOnly = c.canh_bao !== undefined ? c.canh_bao : i >= 6;
+      var mark = c.dat ? "✔ Đạt" : (warnOnly ? "⚠ Xem lại" : "✘ Cần sửa");
+      return "<tr><th scope='row'>" + esc(c.muc) + "</th><td class='" + (c.dat ? "yes" : warnOnly ? "" : "no-bad") + "'>" + mark + "</td><td>" + esc(c.chi_tiet) + "</td></tr>";
     }).join("");
   }
 
@@ -468,13 +475,18 @@
       var rows = [
         ["Số trang (dịch/gốc)", r.so_trang, pg[0] === pg[1] ? "ok" : "Số trang khác bản gốc (bình thường nếu là bản song ngữ)"],
         ["Ký tự lỗi phông, mất dấu", r.ky_tu_loi_phong, r.ky_tu_loi_phong === 0 ? "ok" : "Có ký tự hiện thành ô vuông hoặc dấu hỏi"],
+      ].concat(r.huong === "vi-en" ? [
+        ["Từ tiếng Việt còn sót", r.ty_le_tu_tieng_viet_con_lai, r.ty_le_tu_tieng_viet_con_lai <= 0.02 ? "ok" : "Còn chữ tiếng Việt chưa dịch"],
+        ["Tiếng Việt không dấu còn sót", r.ty_le_tu_tieng_viet_khong_dau, r.ty_le_tu_tieng_viet_khong_dau <= 0.02 ? "ok" : "Còn câu tiếng Việt bị mất dấu"]
+      ] : [
         ["Tỷ lệ từ có dấu", r.ty_le_tu_co_dau, r.ty_le_tu_co_dau >= 0.5 ? "ok" : "Thấp: dấu hiệu mất dấu tiếng Việt"],
-        ["Từ tiếng Anh còn sót", r.ty_le_tu_tieng_anh_con_lai, r.ty_le_tu_tieng_anh_con_lai <= 0.05 ? "ok" : "Còn nhiều tiếng Anh chưa dịch"],
+        ["Từ tiếng Anh còn sót", r.ty_le_tu_tieng_anh_con_lai, r.ty_le_tu_tieng_anh_con_lai <= 0.05 ? "ok" : "Còn nhiều tiếng Anh chưa dịch"]
+      ]).concat([
         ["Liên kết (còn/gốc)", r.lien_ket, lk[0] >= lk[1] ? "ok" : "Mất liên kết"],
         ["Trang mất lớp chữ", r.trang_mat_lop_chu, r.trang_mat_lop_chu === 0 ? "ok" : "Có trang bị biến thành ảnh: không bôi đen, không tìm kiếm được"],
         ["Cặp dòng đè nhau", r.cap_dong_chong_nhau, r.cap_dong_chong_nhau === 0 ? "ok" : "Có chữ đè lên nhau"],
         ["Độ trùng bố cục", r.do_trung_bo_cuc === "" ? "không áp dụng" : r.do_trung_bo_cuc, r.do_trung_bo_cuc === "" || r.do_trung_bo_cuc >= 0.7 ? "ok" : "Chữ dịch lệch nhiều so với vị trí gốc"]
-      ];
+      ]);
       $("#cham-body").innerHTML = rows.map(function (x) {
         var ok = x[2] === "ok";
         return "<tr><th scope='row'>" + esc(x[0]) + "</th><td class='mono'>" + esc(String(x[1]).replace(".", ",")) + "</td><td class='" + (ok ? "yes" : "no-bad") + "'>" + (ok ? "✔ Tốt" : esc(x[2])) + "</td></tr>";
@@ -494,6 +506,9 @@
     ["dragleave", "drop"].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove("over"); }); });
     drop.addEventListener("drop", function (e) { if (e.dataTransfer.files[0]) pickFile(e.dataTransfer.files[0]); });
     $("#pages-apply").addEventListener("click", function () { if (S.bytes) prepare(); });
+    $$('input[name="huong"]').forEach(function (x) {
+      x.addEventListener("change", function () { if (S.bytes && x.checked) { S.huong = x.value; prepare(); } });
+    });
     $("#start").addEventListener("click", start);
     $("#copy-prompt").addEventListener("click", copyPrompt);
     $("#load-answer").addEventListener("click", onLoadAnswer);

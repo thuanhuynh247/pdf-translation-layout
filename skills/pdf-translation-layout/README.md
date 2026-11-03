@@ -1,11 +1,12 @@
-# pdf-translation-layout 3.1
+# pdf-translation-layout 3.2
 
-Dịch PDF tiếng Anh sang tiếng Việt **giữ nguyên bố cục trang**, chạy ngay trong trợ lý AI bạn đang dùng. Không cài Python, không gõ lệnh, không cần khóa API.
+Dịch PDF tiếng Anh sang tiếng Việt, hoặc tiếng Việt sang tiếng Anh, **giữ nguyên bố cục trang**, chạy ngay trong trợ lý AI bạn đang dùng. Không cài Python, không gõ lệnh, không cần khóa API.
 
 - Chữ trong bản dịch là chữ thật: bôi đen, tìm kiếm, sao chép được. Ảnh, bảng, nét vẽ, liên kết giữ nguyên.
 - Phông chữ đủ dấu tiếng Việt, cùng số đo bề ngang với Times New Roman, Arial, Courier New, Calibri, nên bản dịch nằm gọn trong khung cũ.
-- Xuất 4 kiểu: bản tiếng Việt, song ngữ đối trang, song ngữ hai cột, song ngữ xen đoạn.
-- Mỗi lần dịch kèm **phiếu kiểm định**: lỗi phông/mất dấu, đoạn tràn khung, đoạn còn tiếng Anh hoặc lệch số liệu, liên kết, lớp chữ thật.
+- Xuất 4 kiểu: bản dịch, song ngữ đối trang, song ngữ hai cột, song ngữ xen đoạn.
+- PDF tiếng Việt dùng phông cũ TCVN3 (.VnTime) hay VNI được tự chuyển sang Unicode trước khi dịch.
+- Mỗi lần dịch kèm **phiếu kiểm định**: lỗi phông/mất dấu, đoạn tràn khung, đoạn chưa dịch hết hoặc lệch số liệu, liên kết, lớp chữ thật.
 
 Trang chủ: https://pdf.huynhanhthuan.com
 
@@ -14,7 +15,7 @@ Trang chủ: https://pdf.huynhanhthuan.com
 1. Tải file `pdf-translation-layout.zip`.
 2. Vào **Customize → Skills → + → Create skill → Upload a skill**, chọn file zip.
 3. Kiểm tra **Settings → Capabilities**: bật *Code execution and file creation*.
-4. Mở cuộc trò chuyện mới, đính kèm PDF và nhắn: **"Dịch file này sang tiếng Việt, giữ nguyên bố cục"**.
+4. Mở cuộc trò chuyện mới, đính kèm PDF và nhắn: **"Dịch file này sang tiếng Việt, giữ nguyên bố cục"** (hoặc **"Dịch file này sang tiếng Anh"** với PDF tiếng Việt).
 
 Tài liệu dài, Claude dịch theo từng lô và mời bạn nhắn "tiếp". Tốn lượt dùng trong gói Claude của bạn, không tốn thêm tiền.
 
@@ -44,7 +45,7 @@ Bản dịch một tác phẩm là tác phẩm phái sinh. Công cụ này phụ
 ## Giới hạn
 
 - PDF scan (trang là ảnh chụp) chưa dịch được.
-- Chữ nằm trong ảnh, biểu đồ dạng ảnh giữ nguyên tiếng Anh.
+- Chữ nằm trong ảnh, biểu đồ dạng ảnh, con dấu và chữ ký giữ nguyên như bản gốc.
 - Claude.ai cho tải về tối đa 30 MB mỗi file.
 
 ## Giấy phép

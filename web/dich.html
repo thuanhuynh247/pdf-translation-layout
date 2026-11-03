@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Dịch PDF trên web · PDF Translation Layout</title>
-<meta name="description" content="Dịch PDF tiếng Anh sang tiếng Việt giữ nguyên bố cục ngay trên trình duyệt. Tài liệu không rời máy bạn. Dán qua AI bạn đang dùng, dùng khóa API của bạn, hoặc dịch nhanh trên Chrome.">
+<meta name="description" content="Dịch PDF giữ nguyên bố cục ngay trên trình duyệt, tiếng Anh sang tiếng Việt hoặc tiếng Việt sang tiếng Anh. Tài liệu không rời máy bạn. Dán qua AI bạn đang dùng, dùng khóa API của bạn, hoặc bộ dịch có sẵn trong Chrome.">
 <meta name="theme-color" content="#eef2f2">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Dịch PDF trên web, tài liệu không rời máy bạn">
-<meta property="og:description" content="Kéo PDF vào trang, chọn cách dịch, nhận bản tiếng Việt đúng bố cục, bản song ngữ và phiếu kiểm định. Không cần tài khoản, không có máy chủ.">
+<meta property="og:description" content="Kéo PDF vào trang, chọn cách dịch, nhận bản dịch Anh ⇄ Việt đúng bố cục, bản song ngữ và phiếu kiểm định. Không cần tài khoản, không có máy chủ nhận tài liệu.">
 <meta property="og:url" content="https://pdf.huynhanhthuan.com/dich">
 <meta property="og:image" content="https://pdf.huynhanhthuan.com/assets/img/og-dich.jpg">
 <meta property="og:image:width" content="1200">
@@ -49,8 +49,8 @@
     <div class="wrap">
       <div class="section-head">
         <p class="eyebrow">Dịch trên web · không cài gì · tài liệu không rời máy</p>
-        <h1>Kéo PDF vào đây, nhận bản tiếng Việt đúng bố cục</h1>
-        <p>Bộ máy dựng trang chạy ngay trong trình duyệt của bạn. Bạn chọn ai dịch: AI bạn đang dùng (ChatGPT, Gemini, Claude…), khóa API của bạn, hoặc bộ dịch có sẵn trong Chrome.</p>
+        <h1>Kéo PDF vào đây, nhận bản dịch đúng bố cục</h1>
+        <p>Tiếng Anh sang tiếng Việt, hoặc tiếng Việt sang tiếng Anh: trang tự nhận theo chữ trong tài liệu. Bộ máy dựng trang chạy ngay trong trình duyệt của bạn. Bạn chọn ai dịch: AI bạn đang dùng (ChatGPT, Gemini, Claude…), khóa API của bạn, hoặc bộ dịch có sẵn trong Chrome.</p>
       </div>
     </div>
   </section>
@@ -78,6 +78,12 @@
     <div class="wrap">
       <h2 class="h3 step-h" id="b2-h"><span class="step-n">2</span>Chọn cách dịch</h2>
       <div class="summary" id="summary"></div>
+      <div class="dir-pick" role="radiogroup" aria-labelledby="huong-h">
+        <span class="label" id="huong-h">Chiều dịch</span>
+        <label class="check"><input type="radio" name="huong" value="en-vi" checked><span>Anh → Việt</span></label>
+        <label class="check"><input type="radio" name="huong" value="vi-en"><span>Việt → Anh</span></label>
+        <span class="dir-note" id="huong-note"></span>
+      </div>
       <details class="pages-opt">
         <summary>Chỉ dịch một số trang</summary>
         <div class="pages-row">
@@ -169,7 +175,7 @@
         <label class="check"><input type="checkbox" name="out" value="doi-trang" checked><span>Song ngữ đối trang</span></label>
         <label class="check"><input type="checkbox" name="out" value="hai-cot" checked><span>Song ngữ hai cột</span></label>
         <label class="check"><input type="checkbox" name="out" value="xen-doan" checked><span>Song ngữ xen đoạn</span></label>
-        <label class="check"><input type="checkbox" id="own-doc"><span>Đây là tài liệu của tôi: bỏ dòng chân trang “Bản dịch cá nhân bằng AI”</span></label>
+        <label class="check"><input type="checkbox" id="own-doc"><span>Đây là tài liệu của tôi: bỏ dòng chân trang ghi chú bản dịch AI</span></label>
       </fieldset>
       <div class="cta-row"><button class="btn btn-primary" type="button" id="build">Dựng PDF</button></div>
       <p class="label" id="build-text" aria-live="polite"></p>
@@ -188,11 +194,11 @@
       <div class="section-head">
         <p class="eyebrow">Chấm bản dịch có sẵn</p>
         <h2 id="cham-h">Đã dịch bằng công cụ khác? Chấm ngay tại đây</h2>
-        <p>Chọn file gốc tiếng Anh và file đã dịch sang tiếng Việt (từ bất kỳ công cụ nào). Trang đo bảy chỉ số như <a href="chat-luong">trang đo chất lượng</a>, ngay trên máy bạn. Nên chấm bản tiếng Việt đơn ngữ, không phải bản song ngữ.</p>
+        <p>Chọn file gốc và file đã dịch (Anh → Việt hoặc Việt → Anh, từ bất kỳ công cụ nào). Trang đo bảy chỉ số như <a href="chat-luong">trang đo chất lượng</a>, ngay trên máy bạn. Nên chấm bản dịch đơn ngữ, không phải bản song ngữ.</p>
       </div>
       <div class="form-row">
-        <div class="field"><label for="cham-goc">File gốc (tiếng Anh)</label><input class="input" type="file" id="cham-goc" accept="application/pdf,.pdf"></div>
-        <div class="field"><label for="cham-dich">File đã dịch (tiếng Việt)</label><input class="input" type="file" id="cham-dich" accept="application/pdf,.pdf"></div>
+        <div class="field"><label for="cham-goc">File gốc</label><input class="input" type="file" id="cham-goc" accept="application/pdf,.pdf"></div>
+        <div class="field"><label for="cham-dich">File đã dịch</label><input class="input" type="file" id="cham-dich" accept="application/pdf,.pdf"></div>
       </div>
       <div class="cta-row"><button class="btn btn-primary" type="button" id="cham-run">Chấm bản dịch</button></div>
       <p class="label" id="cham-text" aria-live="polite"></p>

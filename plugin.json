@@ -1,9 +1,9 @@
 {
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "pdf-translation-layout",
-  "displayName": "Dịch PDF giữ bố cục (Anh → Việt)",
-  "description": "Dịch PDF tiếng Anh sang tiếng Việt giữ nguyên bố cục trang; xuất bản song ngữ và phiếu kiểm định lỗi dấu, tràn khung. Không cần khóa API.",
-  "version": "3.1.0",
+  "displayName": "Dịch PDF giữ bố cục (Anh ⇄ Việt)",
+  "description": "Dịch PDF Anh – Việt hai chiều, giữ nguyên bố cục trang; tự chuyển phông tiếng Việt cũ sang Unicode; có bản song ngữ và phiếu kiểm định.",
+  "version": "3.2.0",
   "logo": "assets/logo.svg",
   "author": {
     "name": "Huỳnh Anh Thuận",
@@ -11,7 +11,7 @@
   },
   "suggestedPrompts": [
     "Dịch file PDF này sang tiếng Việt, giữ nguyên bố cục",
-    "Làm bản song ngữ đối trang cho file PDF này",
+    "Dịch hồ sơ năng lực này sang tiếng Anh, giữ nguyên trang",
     "Kiểm tra lỗi dấu, tràn chữ trong bản dịch PDF của tôi"
   ],
   "homepage": "https://pdf.huynhanhthuan.com",
@@ -22,6 +22,8 @@
     "vietnamese",
     "dich-pdf",
     "song-ngu",
-    "bilingual"
+    "bilingual",
+    "english",
+    "vietnamese-to-english"
   ]
 }

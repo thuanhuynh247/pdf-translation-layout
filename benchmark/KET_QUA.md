@@ -40,6 +40,23 @@ Thời gian dựng không gồm thời gian AI dịch. Trên Claude.ai hay ChatG
 - Đường cơ sở có độ trùng bố cục cao hơn một chút vì nó ép chữ vào đúng khung cũ bằng cách thu nhỏ cỡ chữ, còn pdf-translation-layout cho phép đoạn dịch giãn sang khoảng trống bên cạnh để giữ cỡ chữ, và có thêm dòng chân trang. Đổi lại, đường cơ sở làm hỏng 384 ký tự trên 6 trang: người đọc thấy "Ch??ng 2. L?p m?t ngân sách".
 - Phiếu kiểm định của pdf-translation-layout trên cả ba mẫu: **ĐẠT** (0 đoạn tràn khung, 0 đoạn phải thu nhỏ dưới 80%).
 
+## Chiều Việt → Anh (bản 3.2, đo ngày 03/11/2026)
+
+Năm PDF tiếng Việt tự tạo bằng `mau/tao_pdf_vi.py` (nội dung giả, không có dữ liệu cá nhân thật), mỗi file thử một kiểu lỗi đầu vào. Bản dịch tiếng Anh do tác giả viết tay, nằm chung trong `mau/ban_dich_tham_chieu.json`. Chạy lại: `python benchmark/chay_mau.py benchmark/mau/mau_vi_congvan.pdf`.
+
+| Tài liệu | Kiểu đầu vào | Số trang | Ký tự lỗi phông | Từ tiếng Việt còn sót | Liên kết | Trang mất lớp chữ | Dòng đè nhau | Độ trùng bố cục |
+|---|---|---|---|---|---|---|---|---|
+| mau_vi_congvan.pdf | công văn 2 trang, Unicode chuẩn | 2/2 | 0 | 0 | 1/1 | 0 | 0 | 0,879 |
+| mau_vi_nfd.pdf | dấu tổ hợp (NFD) | 1/1 | 0 | 0 | 1/1 | 0 | 0 | 0,862 |
+| mau_vi_tcvn3.pdf | phông .VnTime / .VnTimeH (TCVN3) | 1/1 | 0 | 0 | 0/0 | 0 | 0 | 0,78 |
+| mau_vi_vni.pdf | phông VNI-Times | 1/1 | 0 | 0 | 0/0 | 0 | 0 | 0,709 |
+| mau_vi_dauroi.pdf | dấu thanh vẽ thành glyph riêng | 1/1 | 0 | 0 | 0/0 | 0 | 0 | 0,35 |
+
+- Cả năm file: phiếu kiểm định ĐẠT, chữ tiếng Việt được khôi phục đúng trước khi dịch (chuyển mã TCVN3, VNI; gắn lại dấu rời; chuẩn hóa NFC). Thử trên PyMuPDF 1.26.0, 1.28.2 (trang web) và 2.0.
+- Độ trùng bố cục thấp ở `mau_vi_dauroi.pdf` vì file chỉ có một dòng, bản tiếng Anh ngắn hơn nên phủ ít ô lưới hơn; chỉ số này chỉ có ý nghĩa với trang nhiều chữ.
+- Chiều Anh → Việt đo lại sau khi sửa mã: kết quả 6 và 60 trang không đổi so với bảng trên.
+- Chưa đo: PDF tiếng Việt thật (văn bản hành chính, khóa luận, hồ sơ năng lực), văn dịch tiếng Anh thật của AI, PDF scan tiếng Việt.
+
 ## Chưa đo
 
 - Công cụ dịch tài liệu khác (Google Dịch, DeepL, Doctranslate.io, Immersive Translate…): chưa đo. Xem mục 3 và mục 6 của giao thức trước khi đo và công bố.

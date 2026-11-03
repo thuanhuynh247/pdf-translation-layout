@@ -24,3 +24,9 @@ Mã nguồn và tài liệu do Huỳnh Anh Thuận viết dùng giấy phép MIT
 Các phông này có đủ chữ tiếng Việt và cùng số đo bề ngang với Times New Roman, Arial, Courier New và Calibri, nên bản dịch chiếm chỗ gần như bản gốc. Phông được nhúng (rút gọn) vào PDF kết quả, điều SIL OFL cho phép.
 
 Ghi chú: phần này nhằm minh bạch giấy phép, không phải tư vấn pháp lý.
+
+## viparse (bảng chuyển mã TCVN3 và VNI)
+
+- Giấy phép: **MIT**, © 2026 minhtridinh · https://github.com/TrizenX/viparse (bản 0.1.31)
+- `scripts/dich_pdf.py` chép lại hai bảng chuyển mã phông tiếng Việt cũ sang Unicode (TCVN3/ABC cho phông .VnTime, VNI cho phông VNI-Times), thêm một mục suy ra (VNI "aú" → ẳ). Không cài thư viện viparse.
+- Điều kiện giấy phép MIT: giữ thông báo bản quyền trên. Toàn văn: https://github.com/TrizenX/viparse/blob/main/LICENSE

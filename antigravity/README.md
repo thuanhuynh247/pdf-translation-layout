@@ -1,6 +1,6 @@
-# Dịch PDF giữ bố cục (Anh → Việt)
+# Dịch PDF giữ bố cục (Anh ⇄ Việt)
 
-Gửi một file PDF tiếng Anh, nhận lại PDF tiếng Việt giữ nguyên trang: chữ thật (bôi đen, tìm kiếm được), giữ ảnh, bảng, liên kết. Kèm bản song ngữ đối trang, hai cột, xen đoạn và **phiếu kiểm định** (lỗi phông/mất dấu, đoạn tràn khung, đoạn còn tiếng Anh, lệch số liệu).
+Gửi một file PDF tiếng Anh để nhận bản tiếng Việt, hoặc PDF tiếng Việt để nhận bản tiếng Anh, giữ nguyên trang: chữ thật (bôi đen, tìm kiếm được), giữ ảnh, bảng, liên kết. Kèm bản song ngữ đối trang, hai cột, xen đoạn và **phiếu kiểm định** (lỗi phông, đoạn tràn khung, đoạn chưa dịch hết, lệch số liệu, ngày tháng, số hiệu văn bản). PDF tiếng Việt dùng phông cũ TCVN3 (.VnTime) hay VNI được tự chuyển sang Unicode trước khi dịch.
 
 Chính trợ lý AI trong Antigravity là người dịch. Plugin chỉ mang công cụ tách chữ và ghép bản dịch vào đúng chỗ, nên không cần khóa API riêng.
 
@@ -45,7 +45,7 @@ Bản dịch phục vụ đọc hiểu cá nhân; mỗi trang có dòng chân tr
 ## Giới hạn
 
 - PDF scan (trang là ảnh chụp) chưa dịch được.
-- Chữ nằm trong ảnh, biểu đồ dạng ảnh giữ nguyên tiếng Anh.
+- Chữ nằm trong ảnh, biểu đồ dạng ảnh, con dấu và chữ ký giữ nguyên như bản gốc.
 
 Mã nguồn MIT · dùng PyMuPDF (AGPL-3.0) và phông SIL OFL 1.1, xem `THIRD_PARTY_NOTICES.md`.
 Trang chủ: https://pdf.huynhanhthuan.com · Tác giả: Huỳnh Anh Thuận
