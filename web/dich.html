@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dịch PDF trên web · PDF Translation Layout</title>
+<meta name="description" content="Dịch PDF tiếng Anh sang tiếng Việt giữ nguyên bố cục ngay trên trình duyệt. Tài liệu không rời máy bạn. Dán qua AI bạn đang dùng, dùng khóa API của bạn, hoặc dịch nhanh trên Chrome.">
+<meta name="theme-color" content="#eef2f2">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dịch PDF trên web, tài liệu không rời máy bạn">
+<meta property="og:description" content="Kéo PDF vào trang, chọn cách dịch, nhận bản tiếng Việt đúng bố cục, bản song ngữ và phiếu kiểm định. Không cần tài khoản, không có máy chủ.">
+<meta property="og:url" content="https://pdf.huynhanhthuan.com/dich">
+<meta property="og:image" content="https://pdf.huynhanhthuan.com/assets/img/og-dich.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://pdf.huynhanhthuan.com/dich">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="preload" href="assets/fonts/pjs-bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/site.css">
+<script src="config.js" defer></script>
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/dich-app.js" defer></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="pdf-translation-layout, về trang chủ">
+      <img src="assets/img/favicon.svg" alt="" width="26" height="26">
+      <span>pdf-translation-layout <span class="mono" data-version>v3.1.0</span></span>
+    </a>
+    <nav class="nav" aria-label="Mục lục">
+      <a href="./">Trang chủ</a>
+      <a href="dung-voi-claude">Dùng với Claude</a>
+      <a href="chat-luong">Đo chất lượng</a>
+    </nav>
+    <a class="btn btn-ghost btn-sm" href="#rieng-tu">Tài liệu đi đâu?</a>
+  </div>
+</header>
+
+<main id="top" class="app">
+
+  <section class="section page-hero">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Dịch trên web · không cài gì · tài liệu không rời máy</p>
+        <h1>Kéo PDF vào đây, nhận bản tiếng Việt đúng bố cục</h1>
+        <p>Bộ máy dựng trang chạy ngay trong trình duyệt của bạn. Bạn chọn ai dịch: AI bạn đang dùng (ChatGPT, Gemini, Claude…), khóa API của bạn, hoặc bộ dịch có sẵn trong Chrome.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Bước 1: chọn file ===== -->
+  <section class="section app-step" id="b1" aria-labelledby="b1-h">
+    <div class="wrap">
+      <h2 class="h3 step-h" id="b1-h"><span class="step-n">1</span>Chọn file PDF</h2>
+      <label class="drop" id="drop" for="file">
+        <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+        <span class="drop-ic" aria-hidden="true">PDF</span>
+        <strong id="drop-title">Kéo thả file PDF vào đây, hoặc bấm để chọn</strong>
+        <span class="drop-sub" id="drop-sub">PDF có chữ thật (bôi đen được), tối đa 80 MB. Lần đầu trang tải bộ máy khoảng 30 MB; lần sau dùng lại từ bộ nhớ đệm.</span>
+      </label>
+      <div class="engine" id="engine" hidden>
+        <div class="bar" role="progressbar" aria-labelledby="engine-text" aria-valuemin="0" aria-valuemax="100"><i id="engine-bar"></i></div>
+        <p class="label" id="engine-text" aria-live="polite">Đang chuẩn bị…</p>
+      </div>
+      <p class="form-status is-error" id="b1-err" role="alert" hidden></p>
+    </div>
+  </section>
+
+  <!-- ===== Bước 2: tóm tắt + chọn cách dịch ===== -->
+  <section class="section app-step" id="b2" aria-labelledby="b2-h" hidden>
+    <div class="wrap">
+      <h2 class="h3 step-h" id="b2-h"><span class="step-n">2</span>Chọn cách dịch</h2>
+      <div class="summary" id="summary"></div>
+      <details class="pages-opt">
+        <summary>Chỉ dịch một số trang</summary>
+        <div class="pages-row">
+          <input class="input" id="pages" placeholder="Ví dụ: 1-10 hoặc 1-5,8,12-14" aria-label="Các trang cần dịch">
+          <button class="btn btn-ghost btn-sm" type="button" id="pages-apply">Áp dụng</button>
+        </div>
+      </details>
+      <p class="notice" id="resume" hidden></p>
+
+      <div class="modes-pick" role="radiogroup" aria-label="Cách dịch">
+        <label class="mode-card"><input type="radio" name="mode" value="paste" checked>
+          <span class="mc-h">Dán qua AI bạn đang dùng <em>khuyên dùng</em></span>
+          <span class="mc-p">Trang tạo sẵn câu nhắn, bạn chép sang ChatGPT, Gemini hay Claude rồi dán câu trả lời về. Miễn phí, chất lượng tốt, làm theo từng lô.</span></label>
+        <label class="mode-card"><input type="radio" name="mode" value="api">
+          <span class="mc-h">Tự động bằng khóa API</span>
+          <span class="mc-p">Dùng khóa OpenRouter của bạn, trang tự gửi từng lô và nạp kết quả. Bạn trả phí theo lượng chữ cho OpenRouter.</span></label>
+        <label class="mode-card"><input type="radio" name="mode" value="fast">
+          <span class="mc-h">Dịch nhanh trên máy</span>
+          <span class="mc-p" id="fast-note">Dùng bộ dịch có sẵn trong Chrome trên máy tính, không gửi chữ đi đâu. Chất lượng như máy dịch, hợp để đọc lướt.</span></label>
+      </div>
+      <div class="cta-row"><button class="btn btn-primary" type="button" id="start">Bắt đầu dịch</button></div>
+    </div>
+  </section>
+
+  <!-- ===== Bước 3: dịch ===== -->
+  <section class="section app-step" id="b3" aria-labelledby="b3-h" hidden>
+    <div class="wrap">
+      <h2 class="h3 step-h" id="b3-h"><span class="step-n">3</span>Dịch</h2>
+      <div class="bar big" role="progressbar" aria-label="Tiến độ dịch" aria-valuemin="0" aria-valuemax="100"><i id="tr-bar"></i></div>
+      <p class="label" id="tr-text" aria-live="polite"></p>
+
+      <!-- Dán -->
+      <div class="pane" id="pane-paste" hidden>
+        <ol class="mini-steps">
+          <li>Bấm <strong>Chép câu nhắn</strong>, mở AI bạn dùng (nên giữ <strong>cùng một cuộc trò chuyện</strong> cho mọi lô để thuật ngữ thống nhất), dán và gửi.</li>
+          <li>Chép toàn bộ câu trả lời của AI, dán vào ô bên dưới, bấm <strong>Nạp bản dịch</strong>.</li>
+        </ol>
+        <div class="ai-links">
+          <a href="https://chatgpt.com/" target="_blank" rel="noopener">Mở ChatGPT</a>
+          <a href="https://gemini.google.com/app" target="_blank" rel="noopener">Mở Gemini</a>
+          <a href="https://claude.ai/new" target="_blank" rel="noopener">Mở Claude</a>
+          <a href="https://copilot.microsoft.com/" target="_blank" rel="noopener">Mở Copilot</a>
+        </div>
+        <div class="prompt-box">
+          <div class="pb-head"><span class="label" id="pb-label">Câu nhắn lô 1</span><button class="btn btn-primary btn-sm" type="button" id="copy-prompt">Chép câu nhắn</button></div>
+          <textarea class="ta mono" id="prompt" rows="8" readonly aria-label="Câu nhắn để gửi cho AI"></textarea>
+        </div>
+        <label class="label" for="answer">Câu trả lời của AI</label>
+        <textarea class="ta" id="answer" rows="8" placeholder='Dán vào đây câu trả lời, dạng {"p1-1": "…", "p1-2": "…"}'></textarea>
+        <div class="cta-row"><button class="btn btn-primary" type="button" id="load-answer">Nạp bản dịch</button><button class="btn btn-ghost" type="button" id="skip-build">Dựng luôn với phần đã dịch</button></div>
+      </div>
+
+      <!-- API -->
+      <div class="pane" id="pane-api" hidden>
+        <div class="form-row">
+          <div class="field"><label for="api-key">Khóa OpenRouter</label>
+            <input class="input mono" id="api-key" type="password" autocomplete="off" placeholder="sk-or-…">
+            <p class="hint">Khóa chỉ nằm trong trình duyệt này và chỉ gửi tới openrouter.ai. Tạo khóa tại openrouter.ai/keys.</p></div>
+          <div class="field"><label for="api-model">Mô hình</label>
+            <input class="input mono" id="api-model" list="model-list" placeholder="google/gemini-2.5-flash">
+            <datalist id="model-list"></datalist>
+            <p class="hint" id="model-hint">Nhập mã mô hình trên OpenRouter. Có khóa rồi, danh sách sẽ tự hiện.</p></div>
+        </div>
+        <label class="check" for="remember-key"><input type="checkbox" id="remember-key"><span>Nhớ khóa trên máy này</span></label>
+        <div class="cta-row"><button class="btn btn-primary" type="button" id="api-run">Chạy tự động</button><button class="btn btn-ghost" type="button" id="api-stop" hidden>Dừng</button></div>
+      </div>
+
+      <!-- Nhanh -->
+      <div class="pane" id="pane-fast" hidden>
+        <p id="fast-status" class="label"></p>
+        <div class="cta-row"><button class="btn btn-primary" type="button" id="fast-run">Dịch nhanh</button><button class="btn btn-ghost" type="button" id="fast-stop" hidden>Dừng</button></div>
+      </div>
+
+      <div class="warn-box" id="warn-box" hidden>
+        <p><strong id="warn-title"></strong></p>
+        <ul id="warn-list"></ul>
+        <button class="btn btn-ghost btn-sm" type="button" id="redo-warn">Tạo câu nhắn dịch lại các đoạn này</button>
+      </div>
+      <p class="form-status" id="tr-status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===== Bước 4: dựng, kiểm định, tải về ===== -->
+  <section class="section app-step" id="b4" aria-labelledby="b4-h" hidden>
+    <div class="wrap">
+      <h2 class="h3 step-h" id="b4-h"><span class="step-n">4</span>Dựng PDF và tải về</h2>
+      <fieldset class="outs">
+        <legend class="label">Xuất các file</legend>
+        <label class="check"><input type="checkbox" name="out" value="doi-trang" checked><span>Song ngữ đối trang</span></label>
+        <label class="check"><input type="checkbox" name="out" value="hai-cot" checked><span>Song ngữ hai cột</span></label>
+        <label class="check"><input type="checkbox" name="out" value="xen-doan" checked><span>Song ngữ xen đoạn</span></label>
+        <label class="check"><input type="checkbox" id="own-doc"><span>Đây là tài liệu của tôi: bỏ dòng chân trang “Bản dịch cá nhân bằng AI”</span></label>
+      </fieldset>
+      <div class="cta-row"><button class="btn btn-primary" type="button" id="build">Dựng PDF</button></div>
+      <p class="label" id="build-text" aria-live="polite"></p>
+      <div id="result" hidden>
+        <div class="verdict" id="verdict"></div>
+        <div class="matrix-wrap"><table class="matrix qa-table"><thead><tr><th scope="col">Hạng mục</th><th scope="col">Kết quả</th><th scope="col">Chi tiết</th></tr></thead><tbody id="qa-body"></tbody></table></div>
+        <ul class="get-list out-list" id="files"></ul>
+        <div class="cta-row"><a class="btn btn-primary" id="zip-link" href="#" download hidden>Tải tất cả (.zip)</a><button class="btn btn-ghost" type="button" id="new-file">Dịch file khác</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Chấm một bản dịch có sẵn ===== -->
+  <section class="section app-step" id="cham" aria-labelledby="cham-h">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Chấm bản dịch có sẵn</p>
+        <h2 id="cham-h">Đã dịch bằng công cụ khác? Chấm ngay tại đây</h2>
+        <p>Chọn file gốc tiếng Anh và file đã dịch sang tiếng Việt (từ bất kỳ công cụ nào). Trang đo bảy chỉ số như <a href="chat-luong">trang đo chất lượng</a>, ngay trên máy bạn. Nên chấm bản tiếng Việt đơn ngữ, không phải bản song ngữ.</p>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="cham-goc">File gốc (tiếng Anh)</label><input class="input" type="file" id="cham-goc" accept="application/pdf,.pdf"></div>
+        <div class="field"><label for="cham-dich">File đã dịch (tiếng Việt)</label><input class="input" type="file" id="cham-dich" accept="application/pdf,.pdf"></div>
+      </div>
+      <div class="cta-row"><button class="btn btn-primary" type="button" id="cham-run">Chấm bản dịch</button></div>
+      <p class="label" id="cham-text" aria-live="polite"></p>
+      <div class="matrix-wrap" id="cham-result" hidden><table class="matrix"><thead><tr><th scope="col">Chỉ số</th><th scope="col">Kết quả</th><th scope="col">Đánh giá</th></tr></thead><tbody id="cham-body"></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="section" id="rieng-tu" aria-labelledby="rieng-tu-h">
+    <div class="wrap">
+      <div class="note-grid">
+        <div>
+          <h2 id="rieng-tu-h" class="h3">Tài liệu của bạn đi đâu</h2>
+          <p>File PDF được mở và dựng lại ngay trong trình duyệt; trang web không có máy chủ nhận tài liệu. Phần chữ cần dịch chỉ rời máy khi bạn chọn: bạn tự dán sang AI của mình, hoặc trang gửi tới OpenRouter bằng khóa của bạn. Chế độ dịch nhanh của Chrome chạy trên máy, không gửi chữ đi.</p>
+          <p>Bộ máy (Pyodide và thư viện PDF, khoảng 30 MB) được tải từ jsDelivr và PyPI, hai kho phân phối mã nguồn mở công khai. Các dịch vụ này chỉ thấy trình duyệt của bạn tải thư viện, không thấy tài liệu. Mọi file tải về đều được kiểm mã SHA-256 trước khi chạy, nên trang chỉ chạy đúng bộ máy đã kiểm thử; file nào không tải được hoặc sai mã thì trang tự lấy bản dự phòng trên website.</p>
+          <p>Bản dịch dở được lưu tạm trong trình duyệt này để bạn mở lại làm tiếp; xóa bằng nút “Dịch file khác”.</p>
+        </div>
+        <div>
+          <h2 class="h3">Bản quyền và mã nguồn</h2>
+          <p>Bản dịch phục vụ đọc hiểu cá nhân; mặc định mỗi trang có dòng chân trang nhỏ ghi rõ điều này. Muốn đăng, chia sẻ công khai hoặc bán bản dịch sách, bài báo có bản quyền, bạn cần sự đồng ý của chủ sở hữu bản quyền.</p>
+          <p>Bộ máy chạy trong trình duyệt gồm Pyodide (MPL-2.0), PyMuPDF/MuPDF (AGPL-3.0) và phông SIL OFL 1.1. Mã nguồn đầy đủ của trang này và bộ máy: <a data-github hidden href="#">kho GitHub</a><span data-github-off> kho GitHub (đường dẫn sẽ cập nhật)</span>, <a href="engine/NOTICE.txt">thông báo giấy phép</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div>
+      <p><strong>pdf-translation-layout</strong> · Huỳnh Anh Thuận · mã nguồn MIT, bộ máy trên web gồm PyMuPDF (AGPL-3.0) · © <span id="year">2026</span></p>
+      <p>Liên hệ: <a href="mailto:hello@huynhanhthuan.com">hello@huynhanhthuan.com</a></p>
+    </div>
+    <nav aria-label="Liên kết cuối trang">
+      <a href="./">Trang chủ</a>
+      <a href="dung-voi-claude">Dùng với Claude</a>
+      <a href="chat-luong">Đo chất lượng</a>
+      <a href="privacy.html">Chính sách dữ liệu</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

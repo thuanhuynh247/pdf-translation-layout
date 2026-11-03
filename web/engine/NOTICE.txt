@@ -1,0 +1,25 @@
+pdf-translation-layout · bộ máy dịch chạy trong trình duyệt (trang /dich)
+=========================================================================
+
+Thư mục này chứa các thành phần chạy trong trình duyệt của người dùng. Tài liệu PDF không được gửi lên máy chủ.
+Mặc định (ENGINE_SOURCE "cdn" trong config.js), Pyodide được tải từ jsDelivr (npm pyodide@0.29.5) và PyMuPDF từ PyPI;
+trình duyệt kiểm mã SHA-256 của từng file (ghi trong assets/js/dich-worker.js) trước khi chạy.
+Các file trong thư mục này là bản dự phòng khi hai nguồn đó lỗi hoặc trả file sai mã.
+
+1. dich_pdf.py, web_api.py
+   © 2026 Huỳnh Anh Thuận. Giấy phép MIT.
+   Mã nguồn: kho GitHub pdf-translation-layout (đường dẫn trên https://pdf.huynhanhthuan.com).
+
+2. PyMuPDF 1.28.2 (gồm MuPDF), file pymupdf-1.28.2-cp313-abi3-pyemscripten_2025_0_wasm32.whl
+   © Artifex Software, Inc. Giấy phép GNU AGPL-3.0 (hoặc giấy phép thương mại của Artifex).
+   Mã nguồn: https://github.com/pymupdf/PyMuPDF (thẻ 1.28.2) và https://mupdf.com/releases
+   Bản dựng WebAssembly lấy nguyên từ PyPI: https://pypi.org/project/PyMuPDF/1.28.2/
+   Vì trang này phân phối PyMuPDF tới trình duyệt, toàn bộ trang dịch (dich.html, assets/js/dich-app.js,
+   assets/js/dich-worker.js và thư mục engine/) được cung cấp mã nguồn theo AGPL-3.0 tại kho GitHub nói trên.
+
+3. Pyodide 0.29.5 (CPython 3.13 cho WebAssembly), thư mục pyodide/
+   © Pyodide contributors. Giấy phép Mozilla Public License 2.0.
+   Mã nguồn: https://github.com/pyodide/pyodide (thẻ 0.29.5). Gồm CPython (giấy phép PSF).
+
+4. Phông Liberation Serif/Sans/Mono và Carlito, thư mục fonts/
+   SIL Open Font License 1.1, xem fonts/LICENSE-Liberation.txt và fonts/LICENSE-Carlito.txt.
